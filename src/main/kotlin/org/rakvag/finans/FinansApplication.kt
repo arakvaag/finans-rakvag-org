@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
+import java.time.Clock
 import java.util.*
 
 
@@ -34,6 +35,11 @@ class FinansApplication {
 						.build()
 		)
 		return InMemoryUserDetailsManager(users)
+	}
+
+	@Bean
+	fun clock(): Clock {
+		return Clock.systemDefaultZone()
 	}
 }
 

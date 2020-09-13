@@ -4,17 +4,18 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Clock
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-@Suppress("LocalVariableName", "NonAsciiCharacters")
 @Service
 class SkedulertSjekkAvDisponibeltBeløp(
         @Value("\${KONTONUMMER}") private val kontonummer: String,
         @Value("\${SMS_VARSLING_AKTIVERT}") private val smsVarslingAktivert: Boolean,
         private val sbankenClient: SbankenClient,
-        private val smsSender: SmsSender
+        private val smsSender: SmsSender,
+        private val clock: Clock
 ) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -42,7 +43,7 @@ class SkedulertSjekkAvDisponibeltBeløp(
             return false
         }
 
-        if (setOf(22, 23, 0, 1, 2, 3, 4, 5, 6, 7).contains(LocalDateTime.now().hour)) {
+        if (setOf(22, 23, 0, 1, 2, 3, 4, 5, 6, 7).contains(LocalDateTime.now(clock).hour)) {
             return false
         }
 
@@ -51,7 +52,7 @@ class SkedulertSjekkAvDisponibeltBeløp(
         }
 
         val minimumVentetidFørNyttSmsVarsel = Duration.of(3, ChronoUnit.HOURS)
-        if (tidspunktSisteSmsVarsel!!.plus(minimumVentetidFørNyttSmsVarsel) < LocalDateTime.now()) {
+        if (tidspunktSisteSmsVarsel!!.plus(minimumVentetidFørNyttSmsVarsel) < LocalDateTime.now(clock)) {
             return true
         }
 

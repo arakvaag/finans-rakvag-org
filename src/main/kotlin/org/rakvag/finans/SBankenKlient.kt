@@ -65,11 +65,11 @@ class SbankenClient(
 data class GetAccountInfoResponse(
         val availableItems: Int,
         val items: List<AccountInfo>,
-        val errorType: String?,
-        val isError: Boolean,
-        val errorCode: String?,
-        val errorMessage: String?,
-        val traceId: String?
+        val errorType: String? = null,
+        val isError: Boolean = false,
+        val errorCode: String? = null,
+        val errorMessage: String? = null,
+        val traceId: String? = null
 )
 
 data class AccountInfo(
