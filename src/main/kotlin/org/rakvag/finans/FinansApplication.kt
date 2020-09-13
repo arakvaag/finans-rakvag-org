@@ -38,8 +38,16 @@ class FinansApplication {
 	}
 
 	@Bean
-	fun clock(): Clock {
-		return Clock.systemDefaultZone()
+	fun klokkeProvider(): KlokkeProvider {
+		return KlokkeProvider()
+	}
+}
+
+open class KlokkeProvider(
+	private val clock: Clock = Clock.systemDefaultZone()
+) {
+	open fun klokke(): Clock {
+		return clock
 	}
 }
 
