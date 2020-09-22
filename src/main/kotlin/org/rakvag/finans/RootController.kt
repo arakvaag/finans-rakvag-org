@@ -8,7 +8,7 @@ import java.security.Principal
 
 @RestController("/")
 class RootController(
-        @Value("\${KONTONUMMER}") private val kontonummer: String,
+        @Value("\${KONTONUMMER_BRUKSKONTO}") private val kontonummer: String,
         private val sbankenClient: SbankenClient
 ) {
 

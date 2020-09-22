@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit
 @Suppress("FunctionName")
 @Service
 class SkedulertSjekkAvDisponibeltBeløp(
-        @Value("\${KONTONUMMER}") private val kontonummer: String,
+        @Value("\${KONTONUMMER_BRUKSKONTO}") private val kontonummer: String,
         @Value("\${SMS_VARSLING_AKTIVERT}") private val smsVarslingAktivert: Boolean,
         private val sbankenClient: SbankenClient,
         private val smsSender: SmsSender,
@@ -22,8 +22,8 @@ class SkedulertSjekkAvDisponibeltBeløp(
 
     private var tidspunktSisteSmsVarsel: LocalDateTime? = null
 
-    @Scheduled(initialDelayString = "\${INITAL_DELAY_FOR_KONTROLL_AV_DISPONIBELT_BELOP}",
-            fixedDelayString = "\${INTERVALL_MELLOM_KONTROLL_AV_DISPONIBELT_BELOP}")
+    @Scheduled(initialDelayString = "\${KONTROLL_AV_DISPONIBELT_BELOP_INITIAL_DELAY}",
+            fixedDelayString = "\${KONTROLL_AV_DISPONIBELT_BELOP_INTERVALL}")
     fun skedulertSjekkAvSaldo() {
         logger.debug("Kjører skedulert sjekk av saldo")
 
@@ -45,6 +45,7 @@ class SkedulertSjekkAvDisponibeltBeløp(
         }
     }
 
+    @Suppress("DuplicatedCode")
     private fun erVarslingTillattNå(): Boolean {
         if (!smsVarslingAktivert) {
             return false

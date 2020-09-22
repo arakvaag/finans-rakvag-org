@@ -22,29 +22,39 @@ class SbankenClient(
 ) {
 
     private val identityServerUrl = "https://auth.sbanken.no/identityserver/connect/token"
-    private val accountServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/accounts/"
+    private val accountsServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/Accounts"
+    private val paymentsServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/Payments"
 
     fun getAccountInfo(): GetAccountInfoResponse {
-        val basicAuth = getBase64AuthString(sbankenClientId, sbankenPassword)
         val httpClient = HttpClient.newHttpClient()
-        val token = getAccessToken(httpClient, basicAuth)
-        val serviceRequest = HttpRequest.newBuilder(URI(accountServiceUrl))
+        val token = getAccessToken(httpClient)
+        val serviceRequest = HttpRequest.newBuilder(URI(accountsServiceUrl))
                 .header("Accept", "application/json")
                 .header("Authorization", "Bearer $token")
                 .header("customerId", sbankenCustomerId)
                 .build()
         val jsonResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString()).body()
-        return parseGetAccountInfoResponseJson(jsonResponse, objectMapper)
+        return objectMapper.readValue(jsonResponse, GetAccountInfoResponse::class.java)
     }
 
-    private fun getBase64AuthString(clientId: String, secret: String): String {
-        val clientIdEncoded = URLEncoder.encode(clientId, StandardCharsets.UTF_8)
-        val secretEncoded = URLEncoder.encode(secret, StandardCharsets.UTF_8)
-        val base64AuthStringBytes = Base64.getEncoder().encode("$clientIdEncoded:$secretEncoded".toByteArray(StandardCharsets.UTF_8))
-        return String(base64AuthStringBytes, StandardCharsets.UTF_8)
+    fun getPayments(accountId: String): GetPaymentsResponse {
+        val httpClient = HttpClient.newHttpClient()
+        val token = getAccessToken(httpClient)
+        val serviceRequest = HttpRequest.newBuilder(URI("$paymentsServiceUrl/$accountId"))
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer $token")
+                .header("customerId", sbankenCustomerId)
+                .build()
+        val jsonResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString()).body()
+        return objectMapper.readValue(jsonResponse, GetPaymentsResponse::class.java)
     }
 
-    private fun getAccessToken(httpClient: HttpClient, basicAuth: String): String {
+    fun getAccessToken(httpClient: HttpClient = HttpClient.newHttpClient()): String {
+        val clientIdEncoded = URLEncoder.encode(sbankenClientId, StandardCharsets.UTF_8)
+        val passwordEncoded = URLEncoder.encode(sbankenPassword, StandardCharsets.UTF_8)
+        val base64AuthStringBytes = Base64.getEncoder().encode("$clientIdEncoded:$passwordEncoded".toByteArray(StandardCharsets.UTF_8))
+        val basicAuth = String(base64AuthStringBytes, StandardCharsets.UTF_8)
+
         val serviceRequest = HttpRequest.newBuilder(URI(identityServerUrl))
                 .header("Accept", "application/json")
                 .header("Authorization", "Basic $basicAuth")
@@ -56,30 +66,5 @@ class SbankenClient(
                 ?: throw RuntimeException("Feil ved lesing av json")
     }
 
-    private fun parseGetAccountInfoResponseJson(jsonResponse: String, objectMapper: ObjectMapper): GetAccountInfoResponse {
-        return objectMapper.readValue(jsonResponse, GetAccountInfoResponse::class.java)
-    }
-
 }
-
-data class GetAccountInfoResponse(
-        val availableItems: Int,
-        val items: List<AccountInfo>,
-        val errorType: String? = null,
-        val isError: Boolean = false,
-        val errorCode: String? = null,
-        val errorMessage: String? = null,
-        val traceId: String? = null
-)
-
-data class AccountInfo(
-        val accountId: String,
-        val accountNumber: String,
-        val ownerCustomerId: String,
-        val name: String,
-        val accountType: String,
-        val available: Double,
-        val balance: Double,
-        val creditLimit: Double
-)
 
