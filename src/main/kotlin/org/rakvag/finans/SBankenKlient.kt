@@ -1,6 +1,7 @@
 package org.rakvag.finans
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -24,6 +25,8 @@ class SbankenClient(
     private val identityServerUrl = "https://auth.sbanken.no/identityserver/connect/token"
     private val accountsServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/Accounts"
     private val paymentsServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/Payments"
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun getAccountInfo(): GetAccountInfoResponse {
         val httpClient = HttpClient.newHttpClient()
@@ -62,8 +65,13 @@ class SbankenClient(
                 .POST(HttpRequest.BodyPublishers.ofByteArray("grant_type=client_credentials".toByteArray()))
                 .build()
         val response = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString())
-        return (objectMapper.readValue(response.body(), Map::class.java) as Map<*, *>)["access_token"] as String?
-                ?: throw RuntimeException("Feil ved lesing av json")
+
+        val responseMap = objectMapper.readValue(response.body(), Map::class.java) as Map<*, *>
+        if (!responseMap.containsKey("access_token")) {
+            logger.error("Respons ved henting av access-token manglet en key access_token. Key-ene i Json var:\n${responseMap.keys}")
+            throw RuntimeException("Feil ved lesing av json")
+        }
+        return responseMap["access_token"] as String
     }
 
 }
