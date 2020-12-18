@@ -27,7 +27,7 @@ class SkedulertSjekkAvDisponibeltBeløpTest {
 
     @BeforeEach
     fun setup() {
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
         service = SkedulertSjekkAvDisponibeltBeløp(kontonummer, true, sbankenClient, smsSender, klokkeProvider)
         `when`(klokkeProvider.klokke()).thenReturn(hentKlokkeLåstTilOppgittTime(15))
     }
