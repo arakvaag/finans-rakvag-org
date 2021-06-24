@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import java.time.Clock
-import java.util.*
 
 
 @SpringBootApplication
@@ -21,7 +20,7 @@ class FinansApplication {
 
 	@Bean
 	fun userDetailsServiceBean(
-			@Value("\${USER}") user: String,
+			@Value("\${USERNAME}") user: String,
 			@Value("\${PASSWORD}") password: String
 	): UserDetailsService {
 

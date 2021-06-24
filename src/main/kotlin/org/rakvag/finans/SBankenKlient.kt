@@ -18,13 +18,12 @@ import java.util.*
 class SbankenClient(
         @Value("\${SBANKEN_CLIENT_ID}") private val sbankenClientId: String,
         @Value("\${SBANKEN_PASSWORD}") private val sbankenPassword: String,
-        @Value("\${SBANKEN_CUSTOMER_ID}") private val sbankenCustomerId: String,
         private val objectMapper: ObjectMapper
 ) {
 
     private val identityServerUrl = "https://auth.sbanken.no/identityserver/connect/token"
-    private val accountsServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/Accounts"
-    private val paymentsServiceUrl = "https://api.sbanken.no/exec.bank/api/v1/Payments"
+    private val accountsServiceUrl = "https://publicapi.sbanken.no/apibeta/api/v2/Accounts"
+    private val paymentsServiceUrl = "https://publicapi.sbanken.no/apibeta/api/v2/Payments"
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -34,10 +33,9 @@ class SbankenClient(
         val serviceRequest = HttpRequest.newBuilder(URI(accountsServiceUrl))
                 .header("Accept", "application/json")
                 .header("Authorization", "Bearer $token")
-                .header("customerId", sbankenCustomerId)
                 .build()
-        val jsonResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString()).body()
-        return objectMapper.readValue(jsonResponse, GetAccountInfoResponse::class.java)
+        val httpResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString())
+        return objectMapper.readValue(httpResponse.body(), GetAccountInfoResponse::class.java)
     }
 
     fun getPayments(accountId: String): GetPaymentsResponse {
@@ -46,10 +44,9 @@ class SbankenClient(
         val serviceRequest = HttpRequest.newBuilder(URI("$paymentsServiceUrl/$accountId"))
                 .header("Accept", "application/json")
                 .header("Authorization", "Bearer $token")
-                .header("customerId", sbankenCustomerId)
                 .build()
-        val jsonResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString()).body()
-        return objectMapper.readValue(jsonResponse, GetPaymentsResponse::class.java)
+        val httpResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString())
+        return objectMapper.readValue(httpResponse.body(), GetPaymentsResponse::class.java)
     }
 
     fun getAccessToken(httpClient: HttpClient = HttpClient.newHttpClient()): String {
@@ -64,9 +61,9 @@ class SbankenClient(
                 .header("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
                 .POST(HttpRequest.BodyPublishers.ofByteArray("grant_type=client_credentials".toByteArray()))
                 .build()
-        val response = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString())
+        val httpResponse = httpClient.send(serviceRequest, HttpResponse.BodyHandlers.ofString())
 
-        val responseMap = objectMapper.readValue(response.body(), Map::class.java) as Map<*, *>
+        val responseMap = objectMapper.readValue(httpResponse.body(), Map::class.java) as Map<*, *>
         if (!responseMap.containsKey("access_token")) {
             logger.error("Respons ved henting av access-token manglet en key access_token. Key-ene i Json var:\n${responseMap.keys}")
             throw RuntimeException("Feil ved lesing av json")
